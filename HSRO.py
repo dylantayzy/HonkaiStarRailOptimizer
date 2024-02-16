@@ -172,8 +172,11 @@ def Generate_Planar_Set_Relics():
 class Character():
     def __init__(self):
         self.HP = 0
+        self.BHP = 0
         self.ATK = 0
+        self.BATK = 0
         self.DEF = 0
+        self.BDEF = 0
         self.SPD = 0
         self.taunt = 0
         self.CR = 0
@@ -188,18 +191,58 @@ class Character():
     def add_relics(self):
         self.cavern = Generate_Cavern_Set_Relics()
         self.planar = Generate_Planar_Set_Relics()
+        stats_inc = {"HP": 0, "ATK": 0, "DEF": 0, "SPD": 0, "CR": 0, "CDMG": 0,
+                     "BE": 0, "OH": 0, "ER": 0, "EHR": 0, "EFF_RES": 0, "DMG_Bo": 0}
         for i in range(len(self.cavern)):
-            if self.cavern[i].ms.keys()[0] == "FHP":
-                self.HP += self.cavern[i].ms["FHP"]
-            elif self.cavern[i].ms.keys()[0] == "FATK":
-                self.ATK += self.cavern[i].ms["FATK"]
-            elif self.cavern[i].ms.keys()[0] == "SPD":
-                self.SPD += self.cavern[i].ms["SPD"]
+            for key in self.cavern[i].ms:
+                if key[0] == "F":
+                    sub_key = key[1:]
+                    stats_inc[sub_key] += self.cavern[i].ms[key]
+                elif key[0] == "%":
+                    sub_key = key[2:]
+                    stats_inc[sub_key] += self.cavern[i].ms[key] * getattr(self, "B"+sub_key) * 0.01
+                else:
+                    stats_inc[key] += self.cavern[i].ms[key]
+            for key in self.cavern[i].ss:
+                if key[0] == "F":
+                    sub_key = key[1:]
+                    stats_inc[sub_key] += self.cavern[i].ss[key]
+                elif key[0] == "%":
+                    sub_key = key[2:]
+                    stats_inc[sub_key] += self.cavern[i].ss[key] * getattr(self, "B"+sub_key) * 0.01
+                else:
+                    stats_inc[key] += self.cavern[i].ss[key]
+        for i in range(len(self.planar)):
+            for key in self.planar[i].ms:
+                if key[0] == "F":
+                    sub_key = key[1:]
+                    stats_inc[sub_key] += self.planar[i].ms[key]
+                elif key[0] == "%":
+                    sub_key = key[2:]
+                    stats_inc[sub_key] += self.planar[i].ms[key] * getattr(self, "B"+sub_key) * 0.01
+                else:
+                    stats_inc[key] += self.planar[i].ms[key]
+            for key in self.planar[i].ss:
+                if key[0] == "F":
+                    sub_key = key[1:]
+                    stats_inc[sub_key] += self.planar[i].ss[key]
+                elif key[0] == "%":
+                    sub_key = key[2:]
+                    stats_inc[sub_key] += self.planar[i].ss[key] * getattr(self, "B"+sub_key) * 0.01
+                else:
+                    stats_inc[key] += self.planar[i].ss[key]
+        for i in range(len(self.cavern)):
+            for key in self.cavern[i].ms:
+                print("hi")
+        for key in stats_inc:
+            print(f'Stat: {key}, {stats_inc[key]}')
 
 class Dan_Heng(Character):
     def __init__(self, char_lvl):
         super().__init__()
         self.char_lvl = char_lvl
+        self.type = types[0]
+        self.element = elements[4]
         lvl_batk = [74.4, 145.08, 174.84, 212.04, 241.8, 279, 308.76, 345.96, 375.72, 412.92, 442.68, 479.88, 509.64,
                     546.84]
         lvl_bdef = [54, 105.3, 126.9, 153.9, 175.5, 202.5, 224.1, 251.1, 272.7, 299.7, 321.3, 348.3, 369.9, 396.9]
