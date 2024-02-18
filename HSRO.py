@@ -1,5 +1,4 @@
 import random
-
 '''
 First, defining a function to calculate damage
 Base DMG --> CRIT multiplier --> DMG% Boost Multiplier --> DEF Multiplier --> RES Multiplier --> Vulnerability  Multiplier --> Broken
@@ -23,7 +22,7 @@ feet_ms = {"% HP": 0.2784, "% ATK": 0.3006, "% DEF": 0.2995, "SPD": 0.1215}
 orb_ms = {"% HP": 0.1179, "% ATK": 0.1267, "% DEF": 0.1168, "DMG_Bo": 0.0912}
 rope_ms = {"% HP": 0.2729, "% ATK": 0.2774, "% DEF": 0.236, "BE": 0.1568, "ER": 0.0568}
 ss_prob = {"FHP": 0.0959, "FATK": 0.0983, "FDEF": 0.0981, "% HP": 0.0974, "% ATK": 0.1008, "% DEF": 0.0988,
-           "SPD": 0.0427, "CR": 0.0647, "CDMG": 0.0621, "BE": 0.0814, "EHR": 0.0805, "EFF RES": 0.0794}
+           "SPD": 0.0427, "CR": 0.0647, "CDMG": 0.0621, "BE": 0.0814, "EHR": 0.0805, "EFF_RES": 0.0794}
 ms_base = {"FHP": 112.896, "FATK": 56.448, "% HP": 6.9120, "% ATK": 6.9120, "% DEF": 8.64, "SPD": 4.032, "CR": 5.184,
            "CDMG": 10.368, "BE": 10.368, "OH": 5.5296, "ER": 3.1104, "EHR": 6.9120, "DMG_Bo": 6.2208}
 ms_inc = {"FHP": 39.5136, "FATK": 19.7568, "% HP": 2.4192, "% ATK": 2.4192, "% DEF": 3.024, "SPD": 1.4, "CR": 1.8144,
@@ -31,7 +30,7 @@ ms_inc = {"FHP": 39.5136, "FATK": 19.7568, "% HP": 2.4192, "% ATK": 2.4192, "% D
 ss_inc = {"FHP": [33.87, 38.103755, 42.33751], "FATK": [16.935, 19.051877, 21.168754],
           "FDEF": [16.935, 19.051877, 21.168754], "% HP": [3.456, 3.888, 4.32], "% ATK": [3.456, 3.888, 4.32],
           "% DEF": [4.32, 4.86, 5.4], "SPD": [2, 2.3, 2.6], "BE": [5.184, 5.832, 6.48], "EHR": [3.456, 3.888, 4.32],
-          "EFF RES": [3.456, 3.888, 4.32], "CR": [2.592, 2.916, 3.24], "CDMG": [5.184, 5.832, 6.48]}
+          "EFF_RES": [3.456, 3.888, 4.32], "CR": [2.592, 2.916, 3.24], "CDMG": [5.184, 5.832, 6.48]}
 
 '''
 BoST: Band of Sizzling Thunder
@@ -69,14 +68,6 @@ cavern_sets = ["BoST", "CoSB", "EoTL", "FoLF", "GoBS", "GoWS", "HoGF", "KoPP", "
 planar_ornaments = ["BotA", "BK", "CD", "FFG", "FotA", "IS", "PCCE", "PLotD", "RA", "SSS", "SV", "TKoB"]
 
 
-class LC(object):
-    def __init__(self, Lvl, HP, DEF, ATK):
-        self.Lvl = Lvl
-        self.HP = HP
-        self.DEF = DEF
-        self.ATK = ATK
-
-
 class relic(object):
     def __init__(self, set, type, RLvl, ms, ss):
         self.set = set
@@ -86,9 +77,13 @@ class relic(object):
         self.ss = ss
 
 
-def Generate_substat_list():
-    weights = [ss_prob[key] for key in ss_prob]
-    ss = random.choices(list(ss_prob.keys()), weights=weights, k=4)
+def Generate_substat_list(ms):
+    ss_list = ss_prob
+    for key in ms:
+        if key in ss_list:
+            del ss_list[key]
+    weights = [ss_list[key] for key in ss_list]
+    ss = random.choices(list(ss_list.keys()), weights=weights, k=4)
     ss = list(set(ss))
     while len(ss) < 4:
         remaining = 4 - len(ss)
@@ -111,6 +106,7 @@ def Generate_Cavern_Set_Relics():
     # Assume all relic max level
     # Equal chance of getting low, mid or high roll
     # Equal chance of increasing any substat once chosen
+    # Assume probability of choosing substat still remain the same after main stat is chosen less the main stat itself
     global hands, head, body, feet
     i = random.randint(0, len(cavern_sets) - 1)
     for j in range(0, 4):
@@ -118,7 +114,7 @@ def Generate_Cavern_Set_Relics():
             ms = {"FHP": ms_base["FHP"]}
             for level in range(1, 15):
                 ms["FHP"] += ms_inc["FHP"]
-            ss = Generate_substat_list()
+            ss = Generate_substat_list(ms)
             head = relic(cavern_sets[i], relic_types[j], 15, ms, ss)
         elif relic_types[j] == "body":
             weights = [body_ms[key] for key in body_ms]
@@ -126,13 +122,13 @@ def Generate_Cavern_Set_Relics():
             ms = {ms_stat: ms_base[ms_stat]}
             for level in range(1, 15):
                 ms[ms_stat] += ms_inc[ms_stat]
-            ss = Generate_substat_list()
+            ss = Generate_substat_list(ms)
             body = relic(cavern_sets[i], relic_types[j], 15, ms, ss)
         elif relic_types[j] == "hands":
             ms = {"FATK": ms_base["FATK"]}
             for level in range(1, 15):
                 ms["FATK"] += ms_inc["FATK"]
-            ss = Generate_substat_list()
+            ss = Generate_substat_list(ms)
             hands = relic(cavern_sets[i], relic_types[j], 15, ms, ss)
         elif relic_types[j] == "feet":
             weights = [feet_ms[key] for key in feet_ms]
@@ -140,7 +136,7 @@ def Generate_Cavern_Set_Relics():
             ms = {ms_stat: ms_base[ms_stat]}
             for level in range(1, 15):
                 ms[ms_stat] += ms_inc[ms_stat]
-            ss = Generate_substat_list()
+            ss = Generate_substat_list(ms)
             feet = relic(cavern_sets[i], relic_types[j], 15, ms, ss)
     cavern_list = [head, body, hands, feet]
     return cavern_list
@@ -156,7 +152,7 @@ def Generate_Planar_Set_Relics():
             ms = {ms_stat: ms_base[ms_stat]}
             for level in range(1, 15):
                 ms[ms_stat] += ms_inc[ms_stat]
-            ss = Generate_substat_list()
+            ss = Generate_substat_list(ms)
             orb = relic(planar_ornaments[i], relic_types[j], 15, ms, ss)
         elif relic_types[j] == "rope":
             weights = [rope_ms[key] for key in rope_ms]
@@ -164,13 +160,14 @@ def Generate_Planar_Set_Relics():
             ms = {ms_stat: ms_base[ms_stat]}
             for level in range(1, 15):
                 ms[ms_stat] += ms_inc[ms_stat]
-            ss = Generate_substat_list()
+            ss = Generate_substat_list(ms)
             rope = relic(planar_ornaments[i], relic_types[j], 15, ms, ss)
     planar_list = [orb, rope]
     return planar_list
 
 class Character():
     def __init__(self):
+        self.element = ""
         self.HP = 0
         self.BHP = 0
         self.ATK = 0
@@ -188,6 +185,13 @@ class Character():
         self.EHR = 0
         self.EFF_RES = 0
         self.DMG_Bo = 0
+        self.used_basic = False
+        self.used_skill = False
+        self.used_ultimate = False
+        self.hit = False
+
+
+
     def add_relics(self):
         self.cavern = Generate_Cavern_Set_Relics()
         self.planar = Generate_Planar_Set_Relics()
@@ -231,14 +235,14 @@ class Character():
                     stats_inc[sub_key] += self.planar[i].ss[key] * getattr(self, "B"+sub_key) * 0.01
                 else:
                     stats_inc[key] += self.planar[i].ss[key]
-        for i in range(len(self.cavern)):
-            for key in self.cavern[i].ms:
-                print("hi")
         for key in stats_inc:
-            print(f'Stat: {key}, {stats_inc[key]}')
+            setattr(self, key, getattr(self, key)+stats_inc[key])
+
+# LC assume level 80, superimpose 5 for both 3 star and 4 star, superimpose 1 for 5 star
+
 
 class Dan_Heng(Character):
-    def __init__(self, char_lvl):
+    def __init__(self, char_lvl, LC):
         super().__init__()
         self.char_lvl = char_lvl
         self.type = types[0]
@@ -252,3 +256,17 @@ class Dan_Heng(Character):
                 self.BATK = lvl_batk[i]
                 self.BDEF = lvl_bdef[i]
                 self.BHP = lvl_bhp[i]
+        HP = self.HP
+        ATK = self.ATK
+        DEF = self.DEF
+        SPD = self.SPD
+        taunt = self.taunt
+        CR = self.CR
+        CDMG = self.CDMG
+        BE = self.BE
+        OH = self.OH
+        MEn = self.MEn
+        ER = self.ER
+        EHR = self.EHR
+        EFF_RES = self.EFF_RES
+        DMG_Bo = self.DMG_Bo
