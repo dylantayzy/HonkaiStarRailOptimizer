@@ -168,6 +168,7 @@ def Generate_Planar_Set_Relics():
 class Character():
     def __init__(self):
         self.element = ""
+        self.char_lvl = 0
         self.HP = 0
         self.BHP = 0
         self.ATK = 0
@@ -237,6 +238,21 @@ class Character():
                     stats_inc[key] += self.planar[i].ss[key]
         for key in stats_inc:
             setattr(self, key, getattr(self, key)+stats_inc[key])
+    def damage_calculator(self, statM, exDMG, DEF_RED, Vul, Broken):
+        #Enemy RES too varied to account for (for now, idea use excel sheet and pandas)
+        for key in statM:
+            BDMG = getattr(self, key) * statM[key]/100
+            BDMG += exDMG
+        CRIT = BDMG * (self.CR/100 * (1 + self.CDMG/100) + (1 - self.CR/100))
+        DMG_BoM = CRIT * (1 + self.DMG_Bo)
+        DEFM = DMG_BoM * (self.char_lvl + 20)/(110*(1 - DEF_RED/100) + self.char_lvl + 20)
+        RESM = DEFM
+        VulM = RESM * (1 + Vul/100)
+        if Broken:
+            Total_DMG = VulM
+        else:
+            Total_DMG = VulM * 0.9
+        return Total_DMG
 
 # LC assume level 80, superimpose 5 for both 3 star and 4 star, superimpose 1 for 5 star
 
